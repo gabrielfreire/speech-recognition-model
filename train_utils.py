@@ -4,11 +4,12 @@ Defines a functions for training a NN.
 
 from data_generator import AudioGenerator
 import _pickle as pickle
-
+import tensorflow as tf
+from sample_models import final_model
 from keras import backend as K
 from keras.models import Model
-from keras.layers import (Input, Lambda, BatchNormalization)
-from keras.optimizers import SGD, RMSprop
+from keras.layers import Input, Lambda, BatchNormalization, GRU
+from keras.optimizers import SGD, RMSprop, Adam
 from keras.callbacks import ModelCheckpoint, TensorBoard
 import os
 
@@ -93,38 +94,45 @@ def train_my_model(model,
                 sort_by_duration=False,
                 max_duration=40.0):
     
+    """
+        Gabriel Freire: Train my own model
+        sample_models.py > own_model(input_dim=161, output_dim=29)
+    """    
     # create a class instance for obtaining batches of data
     audio_gen = AudioGenerator(minibatch_size=minibatch_size, 
         spectrogram=spectrogram, max_duration=max_duration,
         sort_by_duration=sort_by_duration)
-
+    
     # add the training data to the generator
     audio_gen.load_train_data(train_json)
     audio_gen.load_validation_data(valid_json)
-
+    
     # calculate steps_per_epoch
     num_train_examples=len(audio_gen.train_audio_paths)
     steps_per_epoch = num_train_examples//minibatch_size
-
+    print("Num of training examples: {}".format(num_train_examples))
     # calculate validation_steps
     num_valid_samples = len(audio_gen.valid_audio_paths) 
     validation_steps = num_valid_samples//minibatch_size
+    print("Num of validation examples: {}".format(num_valid_samples))
     
+    # add ctc loss
+    model = add_ctc_loss(model)
+    # Compile
+    # optimizer = SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5)
+    optimizer = Adam(lr=0.01)
+    model.compile(loss=ctc, optimizer=optimizer)
+
     # make results/ directory, if necessary
     if not os.path.exists('results'):
         os.makedirs('results')
+
     if not os.path.exists('tensorboard'):
         os.makedirs('tensorboard')
-
-    model = add_ctc_loss(model)
-    # # Compile
-    optimizer = SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5)
-    model.compile(loss=ctc, optimizer=optimizer)
-
-    # add checkpointer
+    
+    # add checkpointer and tensorboard callbacks
     checkpointer = ModelCheckpoint(filepath='results/'+save_model_path, verbose=0)
-    tensorboard = TensorBoard(log_dir='tensorboard/{}/'.format('my_model_events'), write_graph=False, write_images=True)
-
+    tensorboard = TensorBoard(log_dir='tensorboard/{}/'.format('cnn_rnn_own_model_events'), write_graph=False, write_images=True)
 
     # train the model
     hist = model.fit_generator(generator=audio_gen.next_train(), steps_per_epoch=steps_per_epoch,

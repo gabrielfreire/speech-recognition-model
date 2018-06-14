@@ -95,7 +95,6 @@ class AudioGenerator():
             label = np.array(text_to_int_sequence(texts[cur_index+i])) 
             labels[i, :len(label)] = label
             label_length[i] = len(label)
- 
         # return the arrays
         outputs = {'ctc': np.zeros([self.minibatch_size])}
         inputs = {'the_input': X_data, 
