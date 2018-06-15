@@ -214,7 +214,7 @@ def own_model(input_dim, output_dim=29,dropout_rate=1, filters=256, rnn_size=256
     gru_layer = BatchNormalization(name='bn_rnn_final', axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(gru_layer)
     
     # 1 Fully connected Layer
-    time_dense = TimeDistributed(Dense(output_dim, activation='relu'))(gru_layer)
+    time_dense = TimeDistributed(Dense(output_dim))(gru_layer)
     output_layer = Activation('softmax', name='softmax')(time_dense)
     model = Model(inputs= input_data, outputs=output_layer)
     
