@@ -176,7 +176,7 @@ class AudioGenerator():
     def load_test_data(self, desc_file='test_corpus.json'):
         self.load_metadata_from_desc_file(desc_file, 'test')
     
-    def load_metadata_from_desc_file(self, desc_file, partition):
+    def load_metadata_from_desc_file(self, desc_file, partition='train'):
         """ Read metadata from a JSON-line file
             (possibly takes long, depending on the filesize)
         Params:
@@ -382,7 +382,7 @@ def plot_mfcc_feature(vis_mfcc_feature):
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
     plt.colorbar(im, cax=cax)
-    ax.set_xticks(np.arange(0, 13, 2), minor=False);
+    ax.set_xticks(np.arange(0, 13, 2), minor=False)
     plt.show()
 
 def plot_spectrogram_feature(vis_spectrogram_feature):

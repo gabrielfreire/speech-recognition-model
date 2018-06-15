@@ -127,11 +127,12 @@ def train_my_model(model,
     if not os.path.exists('results'):
         os.makedirs('results')
 
+    # make tensorboard/ directory, if necessary
     if not os.path.exists('tensorboard'):
         os.makedirs('tensorboard')
     
     # add checkpointer and tensorboard callbacks
-    checkpointer = ModelCheckpoint(filepath='results/'+save_model_path, verbose=0)
+    checkpointer = ModelCheckpoint(filepath='results/' + save_model_path, verbose=0)
     tensorboard = TensorBoard(log_dir='tensorboard/{}/'.format('cnn_rnn_own_model_events'), write_graph=False, write_images=True)
 
     # train the model
