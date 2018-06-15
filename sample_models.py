@@ -189,8 +189,8 @@ def final_model(input_dim, filters, kernel_size, conv_stride,
 '''
  Model built by Gabriel Freire based on this paper https://arxiv.org/pdf/1512.02595v1.pdf
 '''
-def own_model(input_dim, output_dim=29,dropout_rate=1, filters=256, rnn_size=256, kernel_size=11, strides=2):
-
+def own_model(input_dim, output_dim=29,dropout_rate=1, filters=200, rnn_size=256, kernel_size=11, strides=2):
+    
     # Convolution configuration
     padding = 'valid'
     initialization = 'glorot_uniform'
@@ -203,14 +203,14 @@ def own_model(input_dim, output_dim=29,dropout_rate=1, filters=256, rnn_size=256
     conv_bn = BatchNormalization(name='conv1d_bn')(conv1d_1)
     
     # 7 Recurrent GRU Bidirectional LayersLayers
-    gru_layer = Bidirectional(GRU(units=rnn_size, activation=clipped_relu, return_sequences=True, implementation=2, name='rnn_1', dropout=dropout_rate, kernel_initializer=initialization), merge_mode='concat')(conv_bn)
+    gru_layer = GRU(units=rnn_size, activation='relu', return_sequences=True, implementation=2, name='rnn_1', dropout=dropout_rate, kernel_initializer=initialization)(conv_bn)
     gru_layer = BatchNormalization(name='bn_rnn_1')(gru_layer)
     
-    for n in range(3):
-        gru_layer = Bidirectional(GRU(units=rnn_size, activation=clipped_relu, return_sequences=True, implementation=2, name='rnn_{}'.format(n + 2), dropout=dropout_rate, kernel_initializer=initialization), merge_mode='concat')(gru_layer)
+    for n in range(1):
+        gru_layer = GRU(units=rnn_size, activation='relu', return_sequences=True, implementation=2, name='rnn_{}'.format(n + 2), dropout=dropout_rate, kernel_initializer=initialization)(gru_layer)
         gru_layer = BatchNormalization(name='bn_rnn_{}'.format(n + 2))(gru_layer)
     
-    gru_layer = Bidirectional(GRU(units=rnn_size, activation=clipped_relu, return_sequences=True, implementation=2, name='rnn_final', dropout=dropout_rate, kernel_initializer=initialization), merge_mode='concat')(gru_layer)
+    gru_layer = Bidirectional(GRU(units=rnn_size, activation='relu', return_sequences=True, implementation=2, name='rnn_final', dropout=dropout_rate, kernel_initializer=initialization), merge_mode='concat')(gru_layer)
     gru_layer = BatchNormalization(name='bn_rnn_final')(gru_layer)
     
     # 1 Fully connected Layer
@@ -222,7 +222,3 @@ def own_model(input_dim, output_dim=29,dropout_rate=1, filters=256, rnn_size=256
     model.output_length = lambda x: cnn_output_length(x, kernel_size, padding, strides)
     print(model.summary())
     return model
-
-
-def clipped_relu(x):
-    return relu(x, max_value=20)
