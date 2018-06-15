@@ -120,7 +120,7 @@ def train_my_model(model,
     model = add_ctc_loss(model)
     # Compile
     # optimizer = SGD(lr=0.02, decay=1e-6, momentum=0.9, nesterov=True, clipnorm=5)
-    optimizer = Adam(lr=0.01, clipnorm=5)
+    optimizer = Adam(lr=0.02, clipnorm=5, decay=1e-6)
     model.compile(loss=ctc, optimizer=optimizer)
 
     # make results/ directory, if necessary
