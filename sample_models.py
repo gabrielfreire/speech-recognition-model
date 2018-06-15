@@ -189,7 +189,7 @@ def final_model(input_dim, filters, kernel_size, conv_stride,
 '''
  Model built by Gabriel Freire based on this paper https://arxiv.org/pdf/1512.02595v1.pdf
 '''
-def own_model(input_dim, output_dim=29,dropout_rate=1, filters=512, rnn_size=256, kernel_size=11, strides=2):
+def own_model(input_dim, output_dim=29,dropout_rate=1, filters=256, rnn_size=256, kernel_size=11, strides=2):
 
     # Convolution configuration
     padding = 'valid'
@@ -199,23 +199,23 @@ def own_model(input_dim, output_dim=29,dropout_rate=1, filters=512, rnn_size=256
     # input_bn = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(input_data)
 
     # 1 1D Convolutional layers
-    conv1d_1 = Conv1D(filters=filters, kernel_size=kernel_size, strides=2, padding='valid', activation='relu', name='conv1d_1', dilation_rate=1)(input_data)
-    conv_bn = BatchNormalization(name='conv1d_bn')(conv1d_1)
+    conv1d_1 = Conv1D(filters=filters, kernel_size=kernel_size, strides=2, padding=padding, activation='relu', name='conv1d_1', dilation_rate=1)(input_data)
+    conv_bn = BatchNormalization(name='conv1d_bn', axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(conv1d_1)
     
     # 7 Recurrent GRU Bidirectional LayersLayers
-    gru_layer = Bidirectional(GRU(units=rnn_size, activation='relu', return_sequences=True, implementation=2, name='rnn_1', dropout=dropout_rate, kernel_initializer=initialization), merge_mode='sum')(conv_bn)
-    gru_layer = BatchNormalization(name='bn_rnn_1')(gru_layer)
+    gru_layer = Bidirectional(GRU(units=rnn_size, activation=clipped_relu, return_sequences=True, implementation=2, name='rnn_1', dropout=dropout_rate, kernel_initializer=initialization))(conv_bn)
+    gru_layer = BatchNormalization(name='bn_rnn_1', axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(gru_layer)
     
     for n in range(3):
-        gru_layer = Bidirectional(GRU(units=rnn_size, activation='relu', return_sequences=True, implementation=2, name='rnn_{}'.format(n + 2), dropout=dropout_rate, kernel_initializer=initialization), merge_mode='sum')(gru_layer)
-        gru_layer = BatchNormalization(name='bn_rnn_{}'.format(n + 2))(gru_layer)
+        gru_layer = Bidirectional(GRU(units=rnn_size, activation=clipped_relu, return_sequences=True, implementation=2, name='rnn_{}'.format(n + 2), dropout=dropout_rate, kernel_initializer=initialization))(gru_layer)
+        gru_layer = BatchNormalization(name='bn_rnn_{}'.format(n + 2), axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(gru_layer)
     
-    gru_layer = Bidirectional(GRU(units=rnn_size, activation='relu', return_sequences=True, implementation=2, name='rnn_final', dropout=dropout_rate, kernel_initializer=initialization), merge_mode='sum')(gru_layer)
-    gru_layer = BatchNormalization(name='bn_rnn_final')(gru_layer)
+    gru_layer = Bidirectional(GRU(units=rnn_size, activation=clipped_relu, return_sequences=True, implementation=2, name='rnn_final', dropout=dropout_rate, kernel_initializer=initialization))(gru_layer)
+    gru_layer = BatchNormalization(name='bn_rnn_final', axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(gru_layer)
     
     # 1 Fully connected Layer
-    time_dense = TimeDistributed(Dense(filters, activation=clipped_relu))(gru_layer)
-    output_layer = Dense(output_dim, activation='softmax', name='output_pred')(time_dense)
+    time_dense = TimeDistributed(Dense(output_dim, activation='relu'))(gru_layer)
+    output_layer = Activation('softmax', name='softmax')(time_dense)
     model = Model(inputs= input_data, outputs=output_layer)
     
     # Specify dynamic output_length
