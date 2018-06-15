@@ -1,5 +1,5 @@
-run amazon ec2: ssh -L localhost:8888:localhost:8888 -i my_new_key.pem ec2-user@ec2-34-247-255-3.eu-west-1.compute.amazonaws.com
-copy files to amazon ec2: scp -i my_new_key.pem -r F:\data\LibriSpeech ec2-user@ec2-34-247-255-3.eu-west-1.compute.amazonaws.com:/home/ec2-user/speech-recognition/LibriSpeech
+run amazon ec2: ssh -L localhost:8888:localhost:8888 -i my_new_key.pem ec2-user@ec2-34-244-61-30.eu-west-1.compute.amazonaws.com
+copy files to amazon ec2: scp -i my_new_key.pem -r F:\data\LibriSpeech ec2-user@ec2-34-244-61-30.eu-west-1.compute.amazonaws.com:/home/ec2-user/speech-recognition/LibriSpeech
 ~
 
 python create_desc_json.py LibriSpeech/dev-clean/ train_corpus.json

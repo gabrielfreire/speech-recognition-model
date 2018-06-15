@@ -2,7 +2,6 @@ from keras import backend as K
 from keras.models import Model
 from keras.activations import relu
 from keras.layers import BatchNormalization, Conv1D, Dense, Input, TimeDistributed, Activation, Bidirectional, SimpleRNN, GRU, LSTM, Lambda, ZeroPadding1D
-from keras.optimizers import SGD, RMSprop
 
 def simple_rnn_model(input_dim, output_dim=29):
     """ Build a recurrent network for speech 
@@ -216,7 +215,7 @@ def own_model(input_dim, output_dim=29,dropout_rate=1, filters=512, rnn_size=256
     
     # 1 Fully connected Layer
     time_dense = TimeDistributed(Dense(filters, activation=clipped_relu))(gru_layer)
-    output_layer = TimeDistributed(Dense(output_dim, activation='softmax', name='output_pred'))(time_dense)
+    output_layer = Dense(output_dim, activation='softmax', name='output_pred')(time_dense)
     model = Model(inputs= input_data, outputs=output_layer)
     
     # Specify dynamic output_length

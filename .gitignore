@@ -17,5 +17,5 @@ __pycache__/
 *.tar.gz
 *.pyc
 *.json
-
+my_new_key.pem
 .git
