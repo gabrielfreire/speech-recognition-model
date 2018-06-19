@@ -45,8 +45,7 @@ def get_predictions(index, partition, trained_model, model_path):
     trained_model.load_weights(model_path)
     prediction = trained_model.predict(np.expand_dims(data_point, axis=0))
     output_length = [trained_model.output_length(data_point.shape[0])] 
-    pred_ints = (K.eval(K.ctc_decode(
-                        prediction, output_length)[0][0])+1).flatten().tolist()
+    pred_ints = ( K.eval( K.ctc_decode( prediction, output_length )[0][0] ) + 1 ).flatten().tolist()
     
     transcription = ''.join(int_sequence_to_text(pred_ints))
     # Correction using KenLM language model toolkit
@@ -62,24 +61,11 @@ def get_predictions(index, partition, trained_model, model_path):
     print('Predicted transcription with correction:\n' + corrected_transcription)
     print('-'*80)
 
-<<<<<<< HEAD
-model_end = final_model(input_dim=13, filters=200, kernel_size=11, 
-                    conv_stride=2, conv_border_mode='valid', units=250, 
-                    activation='relu', cell=GRU, dropout_rate=1, 
-                    number_of_layers=2)
-                    
-get_predictions(index=0, partition='train', trained_model=model_end, model_path='results/model_end.h5')
-=======
->>>>>>> 535f96c602c0f70cd5f9e7cffa948f7969ba8f14
 """
  Gabriel Freire: My final compiled Model
  Optimizer: SGD
  Loss: CTC
  file: sample_models.py
 """
-<<<<<<< HEAD
-my_model = own_model(input_dim=161, output_dim=29)
-=======
 my_model = own_model(input_dim=161, output_dim=29)
 get_predictions(index=0, partition='train', trained_model=my_model, model_path='results/own_model.h5')
->>>>>>> 535f96c602c0f70cd5f9e7cffa948f7969ba8f14

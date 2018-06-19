@@ -113,9 +113,7 @@ def spectrogram_from_file(filename, step=10, window=20, max_freq=None,
             raise ValueError("step size must not be greater than window size")
         hop_length = int(0.001 * step * sample_rate)
         fft_length = int(0.001 * window * sample_rate)
-        pxx, freqs = spectrogram(
-            audio, fft_length=fft_length, sample_rate=sample_rate,
-            hop_length=hop_length)
+        pxx, freqs = spectrogram( audio, fft_length=fft_length, sample_rate=sample_rate, hop_length=hop_length )
         ind = np.where(freqs <= max_freq)[0][-1] + 1
     return np.transpose(np.log(pxx[:ind, :] + eps))
 

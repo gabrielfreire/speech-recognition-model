@@ -18,8 +18,7 @@ from utils import conv_output_length
 RNG_SEED = 123
 
 class AudioGenerator():
-    def __init__(self, step=10, window=20, max_freq=8000, mfcc_dim=13,
-        minibatch_size=20, desc_file=None, spectrogram=True, max_duration=10.0, 
+    def __init__(self, step=10, window=20, max_freq=8000, mfcc_dim=13, minibatch_size=20, desc_file=None, spectrogram=True, max_duration=10.0, 
         sort_by_duration=False):
         """
         Params:
@@ -66,21 +65,16 @@ class AudioGenerator():
             cur_index = self.test_valid_index
             texts = self.test_texts
         else:
-            raise Exception("Invalid partition. "
-                "Must be train/validation")
+            raise Exception("Invalid partition. Must be train/validation")
 
-        features = [self.normalize(self.featurize(a)) for a in 
-            audio_paths[cur_index:cur_index+self.minibatch_size]]
+        features = [self.normalize(self.featurize(a)) for a in audio_paths[cur_index:cur_index+self.minibatch_size]]
 
         # calculate necessary sizes
-        max_length = max([features[i].shape[0] 
-            for i in range(0, self.minibatch_size)])
-        max_string_length = max([len(texts[cur_index+i]) 
-            for i in range(0, self.minibatch_size)])
+        max_length = max([features[i].shape[0] for i in range(0, self.minibatch_size)])
+        max_string_length = max([len(texts[cur_index+i]) for i in range(0, self.minibatch_size)])
         
         # initialize the arrays
-        X_data = np.zeros([self.minibatch_size, max_length, 
-            self.feat_dim*self.spectrogram + self.mfcc_dim*(not self.spectrogram)])
+        X_data = np.zeros([self.minibatch_size, max_length, self.feat_dim*self.spectrogram + self.mfcc_dim*(not self.spectrogram)])
         labels = np.ones([self.minibatch_size, max_string_length]) * 28
         input_length = np.zeros([self.minibatch_size, 1])
         label_length = np.zeros([self.minibatch_size, 1])
@@ -108,11 +102,9 @@ class AudioGenerator():
         """ Shuffle the training or validation data
         """
         if partition == 'train':
-            self.train_audio_paths, self.train_durations, self.train_texts = shuffle_data(
-                self.train_audio_paths, self.train_durations, self.train_texts)
+            self.train_audio_paths, self.train_durations, self.train_texts = shuffle_data(self.train_audio_paths, self.train_durations, self.train_texts)
         elif partition == 'valid':
-            self.valid_audio_paths, self.valid_durations, self.valid_texts = shuffle_data(
-                self.valid_audio_paths, self.valid_durations, self.valid_texts)
+            self.valid_audio_paths, self.valid_durations, self.valid_texts = shuffle_data(self.valid_audio_paths, self.valid_durations, self.valid_texts)
         else:
             raise Exception("Invalid partition. "
                 "Must be train/validation")
@@ -121,11 +113,9 @@ class AudioGenerator():
         """ Sort the training or validation sets by (increasing) duration
         """
         if partition == 'train':
-            self.train_audio_paths, self.train_durations, self.train_texts = sort_data(
-                self.train_audio_paths, self.train_durations, self.train_texts)
+            self.train_audio_paths, self.train_durations, self.train_texts = sort_data(self.train_audio_paths, self.train_durations, self.train_texts)
         elif partition == 'valid':
-            self.valid_audio_paths, self.valid_durations, self.valid_texts = sort_data(
-                self.valid_audio_paths, self.valid_durations, self.valid_texts)
+            self.valid_audio_paths, self.valid_durations, self.valid_texts = sort_data(self.valid_audio_paths, self.valid_durations, self.valid_texts)
         else:
             raise Exception("Invalid partition. "
                 "Must be train/validation")
@@ -198,8 +188,7 @@ class AudioGenerator():
                     # Change to (KeyError, ValueError) or
                     # (KeyError,json.decoder.JSONDecodeError), depending on
                     # json module version
-                    print('Error reading line #{}: {}'
-                                .format(line_num, json_line))
+                    print('Error reading line #{}: {}'.format(line_num, json_line))
         if partition == 'train':
             self.train_audio_paths = audio_paths
             self.train_durations = durations
@@ -213,8 +202,7 @@ class AudioGenerator():
             self.test_durations = durations
             self.test_texts = texts
         else:
-            raise Exception("Invalid partition to load metadata. "
-             "Must be train/validation/test")
+            raise Exception("Invalid partition to load metadata. Must be train/validation/test")
             
     def fit_train(self, k_samples=100):
         """ Estimate the mean and std of the features from the training set
@@ -234,9 +222,7 @@ class AudioGenerator():
             audio_clip (str): Path to the audio clip
         """
         if self.spectrogram:
-            return spectrogram_from_file(
-                audio_clip, step=self.step, window=self.window,
-                max_freq=self.max_freq)
+            return spectrogram_from_file(audio_clip, step=self.step, window=self.window, max_freq=self.max_freq)
         else:
             (rate, sig) = wav.read(audio_clip)
             return mfcc(sig, rate, numcep=self.mfcc_dim)
