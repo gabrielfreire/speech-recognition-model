@@ -62,24 +62,11 @@ def get_predictions(index, partition, trained_model, model_path):
     print('Predicted transcription with correction:\n' + corrected_transcription)
     print('-'*80)
 
-<<<<<<< HEAD
-model_end = final_model(input_dim=13, filters=200, kernel_size=11, 
-                    conv_stride=2, conv_border_mode='valid', units=250, 
-                    activation='relu', cell=GRU, dropout_rate=1, 
-                    number_of_layers=2)
-                    
-get_predictions(index=0, partition='train', trained_model=model_end, model_path='results/model_end.h5')
-=======
->>>>>>> 535f96c602c0f70cd5f9e7cffa948f7969ba8f14
 """
  Gabriel Freire: My final compiled Model
  Optimizer: SGD
  Loss: CTC
  file: sample_models.py
 """
-<<<<<<< HEAD
-my_model = own_model(input_dim=161, output_dim=29)
-=======
 my_model = own_model(input_dim=161, output_dim=29)
 get_predictions(index=0, partition='train', trained_model=my_model, model_path='results/own_model.h5')
->>>>>>> 535f96c602c0f70cd5f9e7cffa948f7969ba8f14
