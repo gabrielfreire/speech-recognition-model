@@ -106,8 +106,7 @@ def correction(sentence):
     BEAM_WIDTH = 2048
     layer = [(0, [])]
     for word in words(sentence):
-        layer = [(-log_probability(node + [cword]), node + [cword]) for cword in candidate_words(word) for
-                 priority, node in layer]
+        layer = [(-log_probability(node + [cword]), node + [cword]) for cword in candidate_words(word) for priority, node in layer]
         heapify(layer)
         layer = layer[:BEAM_WIDTH]
     return ' '.join(layer[0][1])

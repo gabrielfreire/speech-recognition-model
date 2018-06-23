@@ -45,8 +45,7 @@ def get_predictions(index, partition, trained_model, model_path):
     trained_model.load_weights(model_path)
     prediction = trained_model.predict(np.expand_dims(data_point, axis=0))
     output_length = [trained_model.output_length(data_point.shape[0])] 
-    pred_ints = (K.eval(K.ctc_decode(
-                        prediction, output_length)[0][0])+1).flatten().tolist()
+    pred_ints = ( K.eval( K.ctc_decode( prediction, output_length )[0][0] ) + 1 ).flatten().tolist()
     
     transcription = ''.join(int_sequence_to_text(pred_ints))
     # Correction using KenLM language model toolkit

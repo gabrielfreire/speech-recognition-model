@@ -82,13 +82,7 @@ def train_model(input_to_softmax,
         pickle.dump(hist.history, f)
 
 
-def train_my_model(model, 
-                pickle_path,
-                save_model_path,
-                train_json='train_corpus.json',
-                valid_json='valid_corpus.json',
-                minibatch_size=20,
-                spectrogram=True,
+def train_my_model(model, pickle_path, save_model_path, train_json='train_corpus.json', valid_json='valid_corpus.json', minibatch_size=20, spectrogram=True,
                 epochs=20,
                 verbose=1,
                 sort_by_duration=False,

@@ -5,6 +5,8 @@ import numpy as np
 import soundfile
 from numpy.lib.stride_tricks import as_strided
 from char_map import char_map, index_map
+from python_speech_features import mfcc
+import scipy.io.wavfile as wav
 
 def calc_feat_dim(window, max_freq):
     return int(0.001 * window * max_freq) + 1
@@ -66,19 +68,16 @@ def spectrogram(samples, fft_length=256, sample_rate=2, hop_length=128):
 
     trunc = (len(samples) - fft_length) % hop_length
     x = samples[:len(samples) - trunc]
-
+    
     # "stride trick" reshape to include overlap
     nshape = (fft_length, (len(x) - fft_length) // hop_length + 1)
     nstrides = (x.strides[0], x.strides[0] * hop_length)
     x = as_strided(x, shape=nshape, strides=nstrides)
-
     # window stride sanity check
     assert np.all(x[:, 1] == samples[hop_length:(hop_length + fft_length)])
-
     # broadcast window, compute fft over columns and square mod
     x = np.fft.rfft(x * window, axis=0)
     x = np.absolute(x)**2
-
     # scale, 2.0 for everything except dc and fft_length/2
     x[1:-1, :] *= (2.0 / scale)
     x[(0, -1), :] /= scale
@@ -113,11 +112,13 @@ def spectrogram_from_file(filename, step=10, window=20, max_freq=None,
             raise ValueError("step size must not be greater than window size")
         hop_length = int(0.001 * step * sample_rate)
         fft_length = int(0.001 * window * sample_rate)
-        pxx, freqs = spectrogram(
-            audio, fft_length=fft_length, sample_rate=sample_rate,
-            hop_length=hop_length)
+        pxx, freqs = spectrogram( audio, fft_length=fft_length, sample_rate=sample_rate, hop_length=hop_length )
         ind = np.where(freqs <= max_freq)[0][-1] + 1
     return np.transpose(np.log(pxx[:ind, :] + eps))
+
+def mfcc_from_file(filename, mfcc_dim):
+    (rate, sig) = wav.read(filename)
+    return mfcc(sig, rate, numcep=mfcc_dim)
 
 def text_to_int_sequence(text):
     """ Convert text to an integer sequence """
