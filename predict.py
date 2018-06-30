@@ -24,7 +24,7 @@ def get_predictions(index, partition, trained_model, model_path):
         model_path (str): Path to saved acoustic model's weights
     """
     # load the train and test data
-    data_gen = AudioGenerator(spectrogram=False)
+    data_gen = AudioGenerator(spectrogram=True)
     data_gen.load_train_data()
     data_gen.load_validation_data()
         
@@ -68,4 +68,4 @@ def get_predictions(index, partition, trained_model, model_path):
  file: sample_models.py
 """
 my_model = own_model(input_dim=161, output_dim=29)
-get_predictions(index=0, partition='train', trained_model=my_model, model_path='results/own_model.h5')
+get_predictions(index=14, partition='train', trained_model=my_model, model_path='own_model3.h5')
