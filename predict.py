@@ -1,6 +1,6 @@
 import numpy as np
 from data_generator import AudioGenerator, vis_train_features, plot_spectrogram_feature, plot_mfcc_feature, plot_raw_audio
-from sample_models import final_model, own_model
+from sample_models import final_model, own_speech_to_text_model
 from keras import backend as K
 from keras.layers import (GRU)
 from utils import int_sequence_to_text
@@ -67,5 +67,5 @@ def get_predictions(index, partition, trained_model, model_path):
  Loss: CTC
  file: sample_models.py
 """
-my_model = own_model(input_dim=161, output_dim=29)
-get_predictions(index=14, partition='train', trained_model=my_model, model_path='own_model3.h5')
+s2t = own_speech_to_text_model(input_dim=161, output_dim=29)
+get_predictions(index=14, partition='train', trained_model=s2t, model_path='own_model3.h5')

@@ -1,7 +1,8 @@
 from keras import backend as K
 from keras.models import Model
 from keras.activations import relu
-from keras.layers import BatchNormalization, Conv1D, Dense, Input, TimeDistributed, Activation, Bidirectional, SimpleRNN, GRU, LSTM, Lambda, ZeroPadding1D
+from.keras.optimizers import Nadam
+from keras.layers import BatchNormalization, Conv1D, Dense, Input, TimeDistributed, Activation, Bidirectional, SimpleRNN, GRU, LSTM, Lambda, ZeroPadding1D, RepeatVector
 
 def simple_rnn_model(input_dim, output_dim=29):
     """ Build a recurrent network for speech 
@@ -189,28 +190,43 @@ def final_model(input_dim, filters, kernel_size, conv_stride,
 '''
  Model built by Gabriel Freire based on this paper https://arxiv.org/pdf/1512.02595v1.pdf
 '''
-def own_model(input_dim, output_dim=29,dropout_rate=1, filters=200, rnn_size=256, kernel_size=11, strides=2):
+def own_speech_to_text_model(input_dim, output_dim=29,dropout_rate=1, filters=200, rnn_size=256, kernel_size=11, strides=2):
     
     # Convolution configuration
     padding = 'valid'
     initialization = 'glorot_uniform'
+    conv1d_config = {
+        filters: filters,
+        kernel_size: kernel_size,
+        strides: strides,
+        padding: padding,
+        activation: 'relu',
+        dilation_rate: 1
+    }
+    rnn_config = {
+        units: rnn_size,
+        activation: 'relu',
+        return_sequences: True,
+        implementation: 2,
+        dropout_rate: dropout_rate,
+        kernel_initializer: initialization
+    }
     # Input
     input_data = Input(name='the_input', shape=(None, input_dim))
-    # input_bn = BatchNormalization(axis=-1, momentum=0.99, epsilon=1e-3, center=True, scale=True)(input_data)
 
     # 1 1D Convolutional layers
-    conv1d_1 = Conv1D(filters=filters, kernel_size=kernel_size, strides=strides, padding=padding, activation='relu', name='conv1d_1', dilation_rate=1)(input_data)
+    conv1d_1 = Conv1D(**conv1d_config, name='conv1d_1')(input_data)
     conv_bn = BatchNormalization(name='conv1d_bn')(conv1d_1)
     
     # 7 Recurrent GRU Bidirectional LayersLayers
-    gru_layer = GRU(units=rnn_size, activation='relu', return_sequences=True, implementation=2, name='rnn_1', dropout=dropout_rate, kernel_initializer=initialization)(conv_bn)
+    gru_layer = GRU(**rnn_config, name='rnn_1')(conv_bn)
     gru_layer = BatchNormalization(name='bn_rnn_1')(gru_layer)
     
     for n in range(1):
-        gru_layer = GRU(units=rnn_size, activation='relu', return_sequences=True, implementation=2, name='rnn_{}'.format(n + 2), dropout=dropout_rate, kernel_initializer=initialization)(gru_layer)
+        gru_layer = GRU(**rnn_config, name='rnn_{}'.format(n + 2))(gru_layer)
         gru_layer = BatchNormalization(name='bn_rnn_{}'.format(n + 2))(gru_layer)
     
-    gru_layer = Bidirectional(GRU(units=rnn_size, activation='relu', return_sequences=True, implementation=2, name='rnn_final', dropout=dropout_rate, kernel_initializer=initialization), merge_mode='concat')(gru_layer)
+    gru_layer = Bidirectional(GRU(**rnn_config, name='rnn_final'), merge_mode='concat')(gru_layer)
     gru_layer = BatchNormalization(name='bn_rnn_final')(gru_layer)
     
     # 1 Fully connected Layer
@@ -222,3 +238,110 @@ def own_model(input_dim, output_dim=29,dropout_rate=1, filters=200, rnn_size=256
     model.output_length = lambda x: cnn_output_length(x, kernel_size, padding, strides)
     print(model.summary())
     return model
+
+def own_grapheme_to_phoneme_model (layers, chars=29, phons=75, word_len=28, phon_len=28, tables=None,
+        build=True, build_args=None, optimization=2):
+    """
+    Grapheme-to-phoneme converter; RNN GRU encoder-decoder model.
+    # Arguments
+        layers: Amount of layers for the encoder and decoder.
+        chars: The amount of characters (English has 29).
+        phons: The amount of phonemes (CMUDict uses 75).
+        word_len: The length of the input word (CMUDict uses 28).
+        phon_len: The length of the output phoneme (CMUDict uses 28).
+        tables: Charecter en/decoding tables, can be retrieved by `get_cmudict()`.
+        build: If to compile the model in Keras (the model will expect sprase labels).
+    # Output
+        A Keras model.
+        Input:  `(word_length, chars)` shaped one-hot vectors.
+        Output: `(word_length, phons)` shaped one-hot vectors.
+    # Example
+        ```
+        (X_train, y_train), (X_test, y_test), (xtable, ytable) = get_cmudict()
+        y_train = sparse_labels(y_train)
+        model = G2P(layers=3, tables=(xtable, ytable))
+        model.fit(X_train, y_train, batch_size=1024, epochs=20)
+        ```
+    """
+    # V TODO: Engineer encoder model.
+    # V TODO: Engineer decoder model.
+    # V TODO: Get the state of an encoder's layer symbolically.
+    # V TODO: Initialize a decoder layer state with the corresponding encoder layer state.
+    # V TODO: Engineer the initial decoder input token (the output of encoder?).
+    # V TODO: Feed the output of the decoder at t-1 as input at t.
+    #   TODO: Engineer teacher forcing.
+
+    # Decode data into neat named variables.
+    if tables is not None:
+        chars = len(tables[0].chars)
+        phons = len(tables[1].chars)
+        word_length = tables[0].maxlen
+        phon_length = tables[1].maxlen
+
+    # Define general RNN config.
+    rnn_conf = {'units': phons,
+                'return_sequences': True,
+                'implementation': optimization}
+
+    # Define our model's input.
+    input_seq = Input((word_length, chars))
+
+    ''' ENCODER '''
+    # Multi-layer bidirectional GRU.
+    # Keep an array of the encoder forward layer states to later (symbolically) initialize the decoder layers.
+    # Define and add the encoders into the graph.
+    encoder_conf = {**rnn_conf,
+                    'return_state': True}
+    encoder_bi_merge = 'sum'
+    encoder_forward_states = [None]*layers
+
+    encoded, encoder_forward_states[0], _ = Bidirectional(GRU(**encoder_conf), encoder_bi_merge)(input_seq)
+    for layer in range(layers-2):
+        encoded, encoder_forward_states[layer+1], _ = Bidirectional(GRU(**encoder_conf), encoder_bi_merge)(encoded)
+    encoder_conf['return_sequences'] = False
+    encoded, encoder_forward_states[-1], _ = Bidirectional(GRU(**encoder_conf), encoder_bi_merge)(encoded)
+    assert not (None in encoder_forward_states), 'All encoder layer states haves to be assigned.'
+
+    # Assign the encoder's final output as the decoder's initial input.
+    # The encoder's output is of shape: `(phones)`.
+    # The decoder expects input of shape: `(timestep, phones)`.
+    # Use RV to add one timstep dimension to the encoder's output shape.
+    input_decoder = RepeatVector(1)(encoded)
+
+    # Teacher forcing.
+    # ground_truth = Input((phon_len, phons))
+
+    ''' DECODER '''
+    # Multi-layer unidirectional GRU.
+    # Initialize the decoder's layer states with the corresponding forward layer states from the encoder.
+    # Define and add the decoders into the graph.
+    decoder_conf = {**rnn_conf,
+                    'unroll': True,
+                    'output_length': phon_length}
+
+    decoded = GRU(**decoder_conf)(input_decoder, initial_states=encoder_forward_states[0])
+    for layer in range(layers-1):
+        decoded = GRU(**decoder_conf)(decoded, initial_states=encoder_forward_states[layer+1])
+
+    # Add a dense layer at each timestep to determine the output phonemes.
+    # It will result in `(timesteps, number_of_phonemes)` shaped output values.
+    output_densed = TimeDistributed(Dense(phons))(decoded)
+
+    # Softmax to result in `(timesteps, number_of_phonemes)` shaped output probabilities.
+    output_softmax = Activation('softmax')(output_densed)
+
+    # Finalize the G2P model.
+    g2p = Model(input_seq, output_softmax)
+
+    if build:
+        if build_args is None:
+            build_args = {}
+        if 'loss' not in build_args:
+            build_args['loss'] = 'sparse_categorical_crossentropy'
+        if 'optimizer' not in build_args:
+            build_args['optimizer'] = Nadam()
+        if 'metrics' not in build_args:
+            build_args['metrics'] = ['accuracy']
+        g2p.compile(**build_args)
+
+    return g2p
